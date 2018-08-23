@@ -38,7 +38,8 @@ class TileSet {
       Math.floor(latLng[0]),
       Math.floor(latLng[1])
     );
-    return tile.getElevation(latLng);
+
+    return [{"latitude": latLng[0] ,"longitude" : latLng[1] ,"elevation" : tile.getElevation(latLng)}];
   }
 }
 

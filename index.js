@@ -2,6 +2,8 @@ const { json, send } = require("micro");
 const limitedMap = require("limited-map");
 const query = require("micro-query");
 const { FileTileSet, S3TileSet } = require("./tileset");
+const https = require('https');
+
 
 const cacheSize = process.env.TILE_SET_CACHE || 128;
 const tileFolder = process.env.TILE_SET_PATH || __dirname;
@@ -12,12 +14,27 @@ const tiles = tileFolder.startsWith("s3://")
   ? new S3TileSet({ cacheSize })
   : new FileTileSet(tileFolder, { cacheSize });
 
+
 async function handlePOST(req, res) {
   const payload = await json(req, { limit: maxPostSize });
+
+  payloadArray = [];
+
+  if (!payload.locations ) {
+    return send(res, 400, {
+      error:
+        "Invalid Payload. Expected a JSON locations with latitude-longitude pairs: {latitude:xxx,longitude:xxx}"
+    });
+
+  payload.locations.forEach(function(aLocation) {
+    payloadArray.push([aLocation.latitude, aLocation.longitude]);
+  });
+
+
   if (
     !payload ||
-    !Array.isArray(payload) ||
-    !payload.every(([lat, lng]) => Number.isFinite(lat) && Number.isFinite(lng))
+    !Array.isArray(payloadArray) ||
+    !payloadArray.every(([lat, lng]) => Number.isFinite(lat) && Number.isFinite(lng))
   ) {
     return send(res, 400, {
       error:
@@ -26,7 +43,7 @@ async function handlePOST(req, res) {
   }
 
   const result = await limitedMap(
-    payload,
+    payloadArray,
     ll => tiles.getElevation(ll),
     maxParallelProcessing
   );
@@ -53,13 +70,44 @@ async function handleGET(req, res) {
   return result;
 }
 
+
+async function handleGETStatus(req, res) {
+  const options = {
+    hostname: 'elevation-tiles-prod.s3.amazonaws.com',
+    port: 443,
+    path: '/skadi/N00/N00E000.hgt.gz',
+    method: 'HEAD'
+  };
+  
+  const reqStatusS3 = https.request(options, (resStatusS3) => {
+    console.log('statusCode:', resStatusS3.statusCode);
+    
+    if (resStatusS3.statusCode == "200") return send(res, 200);
+
+  });
+  
+  reqStatusS3.on('error', (e) => {
+    return send(res, 500, { error: "S3 broken" });
+  });
+  reqStatusS3.end();
+
+  //return send(res, 500, { error: "Unkwnow error" });
+  
+}
+
 module.exports = async (req, res) => {
-  switch (req.method) {
-    case "POST":
-      return handlePOST(req, res);
-    case "GET":
-      return handleGET(req, res);
-    default:
-      return send(res, 405, { error: "Only GET or POST allowed" });
+  if (req.method == "GET" && req.url == "/status") {
+    return handleGETStatus(req, res);
+  }
+  else
+  {
+    switch (req.method) {
+      case "POST":
+        return handlePOST(req, res);
+      case "GET":
+        return handleGET(req, res);
+      default:
+        return send(res, 405, { error: "Only GET or POST allowed" });
+    }
   }
 };
