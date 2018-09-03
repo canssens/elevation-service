@@ -76,29 +76,6 @@ async function handleGETStatus(req, res) {
 
   return send(res, 200);
 
-  /*
-  const options = {
-    hostname: 'elevation-tiles-prod.s3.amazonaws.com',
-    port: 443,
-    path: '/skadi/N00/N00E000.hgt.gz',
-    method: 'HEAD'
-  };
-  
-  
-  const reqStatusS3 = https.request(options, (resStatusS3) => {
-    console.log('statusCode:', resStatusS3.statusCode);
-    
-    if (resStatusS3.statusCode == "200") return send(res, 200);
-
-  });
-  
-  reqStatusS3.on('error', (e) => {
-    return send(res, 500, { error: "S3 broken" });
-  });
-  reqStatusS3.end();
-
-  //return send(res, 500, { error: "Unkwnow error" });
-  */
 }
 
 module.exports = async (req, res) => {
