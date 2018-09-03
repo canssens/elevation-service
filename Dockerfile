@@ -7,7 +7,6 @@ RUN yarn install
 ENV TILE_SET_CACHE 128
 ENV TILE_SET_PATH /app/data
 ENV MAX_POST_SIZE 700kb
-ENV TILE_SET_PATH s3://decathloncoach-elevation-tiles-prod/skadi
 
 EXPOSE 3000
 
