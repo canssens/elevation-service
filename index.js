@@ -25,6 +25,7 @@ async function handlePOST(req, res) {
       error:
         "Invalid Payload. Expected a JSON locations with latitude-longitude pairs: {latitude:xxx,longitude:xxx}"
     });
+  }
 
   payload.locations.forEach(function(aLocation) {
     payloadArray.push([aLocation.latitude, aLocation.longitude]);
@@ -47,7 +48,7 @@ async function handlePOST(req, res) {
     ll => tiles.getElevation(ll),
     maxParallelProcessing
   );
-  return result;
+  return {"results" : result };
 }
 
 async function handleGET(req, res) {
@@ -72,12 +73,17 @@ async function handleGET(req, res) {
 
 
 async function handleGETStatus(req, res) {
+
+  return send(res, 200);
+
+  /*
   const options = {
     hostname: 'elevation-tiles-prod.s3.amazonaws.com',
     port: 443,
     path: '/skadi/N00/N00E000.hgt.gz',
     method: 'HEAD'
   };
+  
   
   const reqStatusS3 = https.request(options, (resStatusS3) => {
     console.log('statusCode:', resStatusS3.statusCode);
@@ -92,7 +98,7 @@ async function handleGETStatus(req, res) {
   reqStatusS3.end();
 
   //return send(res, 500, { error: "Unkwnow error" });
-  
+  */
 }
 
 module.exports = async (req, res) => {
