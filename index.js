@@ -73,9 +73,7 @@ async function handleGET(req, res) {
 
 
 async function handleGETStatus(req, res) {
-
   return send(res, 200);
-
 }
 
 module.exports = async (req, res) => {
